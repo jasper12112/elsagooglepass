@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Pass</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3498db">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .pass-container {
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            color: white;
+            position: relative;
+        }
+        
+        .pass-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+        }
+        
+        .pass-header h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .pass-content {
+            padding: 20px;
+        }
+        
+        .pass-field {
+            margin-bottom: 20px;
+        }
+        
+        .pass-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .pass-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .pass-barcode {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+        
+        #qrcode {
+            margin: 0 auto;
+        }
+        
+        .install-prompt {
+            display: none;
+            margin-top: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .install-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+        
+        .editable:hover {
+            background-color: rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+        
+        .dotted-line {
+            border-top: 2px dashed rgba(255,255,255,0.3);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <div class="pass-container">
+                <div class="pass-header">
+                    <div class="logo">DP</div>
+                    <h1>DIGITAL PASS</h1>
+                </div>
+                <div class="pass-content">
+                    <div class="pass-field">
+                        <div class="pass-label">Name</div>
+                        <div class="pass-value editable" id="nameValue" onclick="editField('nameValue')">John Doe</div>
+                    </div>
+                    <div class="pass-field">
+                        <div class="pass-label">Membership ID</div>
+                        <div class="pass-value editable" id="membershipValue" onclick="editField('membershipValue')">1234567890</div>
+                    </div>
+                    <div class="dotted-line"></div>
+                    <div class="pass-field">
+                        <div class="pass-label">Valid Until</div>
+                        <div class="pass-value editable" id="expiryValue" onclick="editField('expiryValue')">March 1, 2026</div>
+                    </div>
+                    <div class="pass-barcode">
+                        <div id="qrcode"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="installPrompt" class="install-prompt">
+                <p>Add this pass to your home screen for quick access!</p>
+                <button id="installButton" class="install-button">Install Pass</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        Tap on any field to edit • Your changes are saved automatically
+    </footer>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // Store for install prompt
+        let deferredPrompt;
+        
+        // Generate QR code based on membership ID
+        function generateQR() {
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = ''; // Clear previous QR code
+            
+            const membershipId = document.getElementById("membershipValue").innerText;
+            
+            new QRCode(qrContainer, {
+                text: membershipId,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // Edit field function
+        function editField(fieldId) {
+            const element = document.getElementById(fieldId);
+            const currentValue = element.innerText;
+            
+            const newValue = prompt(`Edit ${fieldId.replace('Value', '')}:`, currentValue);
+            
+            if (newValue !== null && newValue.trim() !== '') {
+                element.innerText = newValue;
+                saveToLocalStorage();
+                
+                // If membership ID changed, regenerate QR code
+                if (fieldId === 'membershipValue') {
+                    generateQR();
+                }
+            }
+        }
+        
+        // Save data to localStorage
+        function saveToLocalStorage() {
+            const passData = {
+                name: document.getElementById("nameValue").innerText,
+                membership: document.getElementById("membershipValue").innerText,
+                expiry: document.getElementById("expiryValue").innerText
+            };
+            
+            localStorage.setItem('digitalPassData', JSON.stringify(passData));
+        }
+        
+        // Load data from localStorage
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('digitalPassData');
+            
+            if (savedData) {
+                const passData = JSON.parse(savedData);
+                
+                document.getElementById("nameValue").innerText = passData.name;
+                document.getElementById("membershipValue").innerText = passData.membership;
+                document.getElementById("expiryValue").innerText = passData.expiry;
+            }
+        }
+        
+        // Initialize when page loads
+        window.onload = function() {
+            loadFromLocalStorage();
+            generateQR();
+        };
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(function(registration) {
+                    console.log('Service Worker registered successfully');
+                })
+                .catch(function(error) {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+        
+        // Handle installation
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 76+ from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install prompt
+            document.getElementById('installPrompt').style.display = 'block';
+        });
+        
+        document.getElementById('installButton').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                // We no longer need the prompt
+                deferredPrompt = null;
+                // Hide the install button
+                document.getElementById('installPrompt').style.display = 'none';
+            }
+        });
+        
+        // If already installed, hide the install prompt
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installPrompt').style.display = 'none';
+            deferredPrompt = null;
+        });
+    </script>
+</body>
+</html>
