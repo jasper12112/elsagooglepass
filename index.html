@@ -31,7 +31,7 @@
             width: 100%;
             max-width: 380px;
             margin: 0 auto;
-            background: linear-gradient(135deg, #3498db, #2980b9);
+            background: linear-gradient(135deg, #04143b, #010F33);
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -145,21 +145,21 @@
             <div class="pass-container">
                 <div class="pass-header">
                     <div class="logo">DP</div>
-                    <h1>DIGITAL PASS</h1>
+                    <h1 style="padding-left: 3rem;">ELSA Groningen</h1>
                 </div>
                 <div class="pass-content">
                     <div class="pass-field">
                         <div class="pass-label">Name</div>
-                        <div class="pass-value editable" id="nameValue" onclick="editField('nameValue')">John Doe</div>
+                        <div class="pass-value editable" id="nameValue" onclick="editField('nameValue')">Enter name</div>
                     </div>
                     <div class="pass-field">
                         <div class="pass-label">Membership ID</div>
-                        <div class="pass-value editable" id="membershipValue" onclick="editField('membershipValue')">1234567890</div>
+                        <div class="pass-value editable" id="membershipValue">1234567890</div>
                     </div>
                     <div class="dotted-line"></div>
                     <div class="pass-field">
                         <div class="pass-label">Valid Until</div>
-                        <div class="pass-value editable" id="expiryValue" onclick="editField('expiryValue')">March 1, 2026</div>
+                        <div class="pass-value editable" id="expiryValue">March 1, 2026</div>
                     </div>
                     <div class="pass-barcode">
                         <div id="qrcode"></div>
@@ -216,6 +216,11 @@
             }
         }
         
+        // Generate random 10-digit membership ID
+        function generateMembershipId() {
+            return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        }
+        
         // Save data to localStorage
         function saveToLocalStorage() {
             const passData = {
@@ -237,6 +242,10 @@
                 document.getElementById("nameValue").innerText = passData.name;
                 document.getElementById("membershipValue").innerText = passData.membership;
                 document.getElementById("expiryValue").innerText = passData.expiry;
+            } else {
+                // Generate random membership ID for new users
+                document.getElementById("membershipValue").innerText = generateMembershipId();
+                saveToLocalStorage();
             }
         }
         
